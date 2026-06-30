@@ -1,12 +1,15 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE-MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE-APACHE)
+
 # Credential Envelope Kata
 
 > Rebuild the **two-hash boundary** that lets one signed credential be disclosed
 > many ways without breaking its seal.
 
 This kata is extracted from
-[`examples/credential_envelope.rs`](../../examples/credential_envelope.rs) in
-the SyCore repo, which demonstrates Part 4 of the FolkEngine spec
-([`docs/SPEC-credential-envelope.md`](../../docs/SPEC-credential-envelope.md)).
+[`examples/credential_envelope.rs`](https://github.com/folkengine/sycore/blob/main/examples/credential_envelope.rs)
+in the SyCore repo, which demonstrates Part 4 of the FolkEngine spec
+([`docs/SPEC-credential-envelope.md`](https://github.com/folkengine/sycore/blob/main/docs/SPEC-credential-envelope.md)).
 You do not need the rest of the codebase to do it.
 
 ---
@@ -65,7 +68,7 @@ For credentials this is mandatory, not optional — the privacy property must be
 
 ## The challenge
 
-Implement the four functions in [`exercise/src/lib.rs`](exercise/src/lib.rs),
+Implement the four functions in [`src/lib.rs`](src/lib.rs),
 each currently `todo!()`:
 
 | Function          | What it does                                                |
@@ -75,7 +78,7 @@ each currently `todo!()`:
 | `cas_address`      | BLAKE3 over the envelope's dCBOR bytes.                     |
 | `elide_concert`    | Remove the `assignedTo` assertion (holder-side disclosure). |
 
-Then make the suite in [`exercise/tests/two_hash.rs`](exercise/tests/two_hash.rs)
+Then make the suite in [`tests/two_hash.rs`](tests/two_hash.rs)
 pass — **in order**. The tests ramp from constructing the credential to proving
 the full elision invariant.
 
@@ -148,10 +151,10 @@ The full worked answer is in [`solution/`](solution/).
 
 ## Where this lives in the real codebase
 
-- **Source:** [`examples/credential_envelope.rs`](../../examples/credential_envelope.rs)
+- **Source:** [`examples/credential_envelope.rs`](https://github.com/folkengine/sycore/blob/main/examples/credential_envelope.rs)
   — the runnable example (`cargo run --example credential_envelope`) that prints
   all six stages and asserts the same §4.2 vector.
-- **Spec:** [`docs/SPEC-credential-envelope.md`](../../docs/SPEC-credential-envelope.md)
+- **Spec:** [`docs/SPEC-credential-envelope.md`](https://github.com/folkengine/sycore/blob/main/docs/SPEC-credential-envelope.md)
   §4.2 (the two-hash boundary), §4.6 (mandatory salting).
 
 **How the real version differs:** in the repo, the four facts are not strings —

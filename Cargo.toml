@@ -2,6 +2,8 @@
 name = "credential_envelope_kata"
 version = "0.0.0"
 edition = "2021"
+authors = ["electronicpanopticon <gaoler@electronicpanopticon.com>"]
+license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
