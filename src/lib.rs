@@ -28,15 +28,17 @@
 //!
 //! ## Your task
 //!
-//! Implement the four functions below (each is `todo!()`). Run `cargo test` and
-//! make the suite in `tests/two_hash.rs` pass, in order — the tests ramp from
-//! constructing the credential to asserting the full invariant.
+//! Work the seven steps in `README.md`, one at a time. Each step is a single
+//! small change to one function below, and each turns exactly one more test in
+//! `tests/two_hash.rs` green. Do the change, run just that one test, watch it
+//! pass, move on. The `Step N` tags below tell you which function each step
+//! touches; don't jump ahead.
 
 use bc_components::SigningPrivateKey;
 use bc_envelope::prelude::*;
 
-/// Build the **salted, unsigned** credential envelope for an assignment
-/// attestation.
+/// **Steps 1 & 2** · Build the **salted, unsigned** credential envelope for an
+/// assignment attestation.
 ///
 /// Structure it as a Gordian Envelope:
 /// - **subject:** the `musician` id
@@ -44,46 +46,57 @@ use bc_envelope::prelude::*;
 /// - **assertion:** `"orchestra"` → `orchestra`
 /// - **assertion:** `"instrument"` → `instrument`
 ///
-/// Every object here is *low-entropy* — a short id or a constrained vocabulary
-/// whose whole value space could be enumerated. Such fields MUST be **salted**
-/// at issuance: without salt, a verifier could later brute-force an *elided*
-/// field by hashing candidate values until one matches the leftover digest.
-/// Salt makes the privacy property structural instead of hoped-for.
+/// **Step 1** is just getting those three assertions in place (test:
+/// `credential_has_three_assertions`).
+///
+/// **Step 2** is salting them. Every object here is *low-entropy* — a short id
+/// or a constrained vocabulary whose whole value space could be enumerated.
+/// Such fields MUST be **salted** at issuance: without salt, a verifier could
+/// later brute-force an *elided* field by hashing candidate values until one
+/// matches the leftover digest. Salt makes the privacy property structural
+/// instead of hoped-for (test: `low_entropy_fields_are_salted`).
 pub fn build_credential(
     musician: &str,
     concert: &str,
     orchestra: &str,
     instrument: &str,
 ) -> Envelope {
-    todo!("build a Gordian Envelope with the musician as subject and three salted assertions")
+    todo!("Step 1: musician as subject + three assertions. Step 2: salt them.")
 }
 
-/// Issue the credential by **wrapping it, then signing** with the issuer's key.
+/// **Step 3** · Issue the credential by **wrapping it, then signing** with the
+/// issuer's key (test: `signature_verifies_on_full_disclosure`).
 ///
 /// Order matters: wrapping first means the signature covers the *entire*
 /// credential as one wrapped-root digest, so it keeps verifying after a holder
 /// later elides an inner field. (Signing the bare subject instead would only
 /// attest the subject, not the assertions.)
 pub fn issue(credential: &Envelope, issuer: &SigningPrivateKey) -> Envelope {
-    todo!("wrap the credential and add the issuer's signature")
+    todo!("Step 3: wrap the credential, then add the issuer's signature")
 }
 
-/// The **CAS address**: a BLAKE3 hash over the envelope's dCBOR serialization.
+/// **Step 7** · The **CAS address**: a BLAKE3 hash over the envelope's dCBOR
+/// serialization (test: `elision_changes_the_cas_address`).
 ///
 /// This answers *where this exact blob lives*. It is computed over the
 /// serialized bytes, so it changes whenever those bytes change — including
 /// after elision.
 pub fn cas_address(envelope: &Envelope) -> [u8; 32] {
-    todo!("BLAKE3 over the envelope's tagged-CBOR bytes")
+    todo!("Step 7: BLAKE3 over the envelope's tagged-CBOR bytes")
 }
 
-/// Holder-side **elision**: return a disclosure of `signed` with the
-/// `"assignedTo"` (concert) assertion removed — proving the rest of the
+/// **Step 4** · Holder-side **elision**: return a disclosure of `signed` with
+/// the `"assignedTo"` (concert) assertion removed — proving the rest of the
 /// credential without revealing *which* concert.
 ///
 /// Elision works by digest: you locate the assertion to remove (its digest is
 /// identical wherever that subtree appears, so take it from the original
 /// unsigned `credential`) and tell the signed envelope to elide that target.
+///
+/// This one function is the payoff: implementing it turns on **three** tests at
+/// once (steps 4, 5, 6) — `elision_preserves_the_envelope_root`,
+/// `signature_survives_elision`, and `elided_disclosure_hides_the_concert` —
+/// because they are all *consequences* of the same invariant.
 pub fn elide_concert(signed: &Envelope, credential: &Envelope) -> Envelope {
-    todo!("find the assignedTo assertion and elide it from the signed envelope")
+    todo!("Step 4: find the assignedTo assertion and elide it from the signed envelope")
 }

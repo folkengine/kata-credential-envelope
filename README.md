@@ -68,40 +68,81 @@ For credentials this is mandatory, not optional — the privacy property must be
 
 ## The challenge
 
-Implement the four functions in [`src/lib.rs`](src/lib.rs),
-each currently `todo!()`:
+You implement the four functions in [`src/lib.rs`](src/lib.rs) (each currently
+`todo!()`) and make the seven tests in
+[`tests/two_hash.rs`](tests/two_hash.rs) pass. But don't try to do it all at
+once. **Do it one step at a time**: make one small change, run the single test
+for that step, watch it go green, then move on.
 
-| Function          | What it does                                                |
-| ----------------- | ----------------------------------------------------------- |
-| `build_credential` | Construct the salted, unsigned envelope from four facts.   |
-| `issue`            | Wrap-then-sign with the issuer's key.                       |
-| `cas_address`      | BLAKE3 over the envelope's dCBOR bytes.                     |
-| `elide_concert`    | Remove the `assignedTo` assertion (holder-side disclosure). |
-
-Then make the suite in [`tests/two_hash.rs`](tests/two_hash.rs)
-pass — **in order**. The tests ramp from constructing the credential to proving
-the full elision invariant.
+Run the whole suite any time with:
 
 ```bash
-cd exercise
 cargo test          # 7 tests; all fail until you implement the stubs
 ```
 
-You're done when all 7 pass. The order is load-bearing in the real flow too:
-**salt → sign → elide**. The issuer salts low-entropy fields *before* signing;
-the holder elides *after*. Eliding an unsalted low-entropy field would let a
-verifier recover it from its digest.
+…but the point of this kata is the *ramp*. Each step below names one test — run
+just that one with `cargo test <name>` — and tells you the one change that makes
+it pass.
 
-### The test ramp
+### The steps
 
-1. `credential_has_three_assertions` — basic construction.
-2. `low_entropy_fields_are_salted` — salt is *random*, so two builds of the same
-   facts must differ.
-3. `signature_verifies_on_full_disclosure` — wrap-then-sign works.
-4. `elision_changes_the_cas_address` — BLAKE3 changes.
-5. `elision_preserves_the_envelope_root` — **SHA-256 is invariant** (the insight).
-6. `signature_survives_elision` — the payoff.
-7. `elided_disclosure_hides_the_concert` — the concert id is actually gone.
+> **Step 1 — three assertions.** In `build_credential`, return an
+> `Envelope::new(musician)` with three plain assertions: `assignedTo → concert`,
+> `orchestra → orchestra`, `instrument → instrument`.
+> ```bash
+> cargo test credential_has_three_assertions
+> ```
+
+> **Step 2 — salt them.** Still in `build_credential`: change each
+> `add_assertion` to `add_assertion_salted(pred, obj, true)`. Salt is random, so
+> the same facts now produce a different envelope every time — which is exactly
+> what this test checks (and why an elided field can't be brute-forced).
+> ```bash
+> cargo test low_entropy_fields_are_salted
+> ```
+
+> **Step 3 — issue it.** In `issue`, `wrap()` the credential *then*
+> `add_signature(issuer)`. Wrapping first makes the signature cover the whole
+> credential as one root — that's what lets it survive elision later.
+> ```bash
+> cargo test signature_verifies_on_full_disclosure
+> ```
+
+> **Step 4 — elide the concert.** In `elide_concert`, get the `assignedTo`
+> assertion from the *unsigned* `credential` (via
+> `assertion_with_predicate("assignedTo")`) and pass it to
+> `signed.elide_removing_target(&target)`. This one function is the payoff — it
+> makes **three** tests pass at once (steps 4, 5, 6), because they're all
+> consequences of the same invariant. Start with the root:
+> ```bash
+> cargo test elision_preserves_the_envelope_root   # SHA-256 is invariant — the insight
+> ```
+
+> **Step 5 — signature survives (no new code).** Because the root didn't move,
+> the signature still verifies on the elided disclosure. Just confirm it:
+> ```bash
+> cargo test signature_survives_elision
+> ```
+
+> **Step 6 — the concert is gone (no new code).** The removed field shows as
+> `ELIDED` and the id never leaks. Confirm it:
+> ```bash
+> cargo test elided_disclosure_hides_the_concert
+> ```
+
+> **Step 7 — the other hash.** In `cas_address`, BLAKE3-hash the serialized
+> bytes: `blake3::hash(&envelope.tagged_cbor().to_cbor_data())`. Elision
+> rewrote those bytes, so the CAS address changes — even though the SHA-256 root
+> (step 4) stayed put. That contrast is the whole point of the kata.
+> ```bash
+> cargo test elision_changes_the_cas_address
+> ```
+
+You're done when all seven pass (`cargo test`). Notice the shape of the real
+flow you just walked: **salt → sign → elide**. The issuer salts low-entropy
+fields *before* signing; the holder elides *after*. Eliding an unsalted
+low-entropy field would let a verifier recover it from its digest — which is why
+step 2 comes before everything else.
 
 ---
 
@@ -145,7 +186,9 @@ exactly the brute-forceable state the test is there to catch.
 
 </details>
 
-The full worked answer is in [`solution/`](solution/).
+The full worked answer is in [`solution/`](solution/): the four function bodies
+in [`solution/lib.rs`](solution/lib.rs) and a step-by-step walkthrough of the
+*why* in [`solution/SOLUTION.md`](solution/SOLUTION.md).
 
 ---
 
